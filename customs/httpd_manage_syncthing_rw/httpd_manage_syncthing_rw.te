@@ -1,0 +1,15 @@
+
+module httpd_manage_syncthing_rw 1.0.0;
+
+require {
+	type syncthing_content_rw_t;
+	type httpd_t;
+	type syncthing_t;
+	type user_home_t;
+	class file { create getattr map open read rename write setattr unlink };
+	class dir { add_name create read remove_name rename reparent setattr write rmdir };
+}
+
+allow httpd_t syncthing_content_rw_t:dir { add_name create read remove_name rename reparent setattr write rmdir };
+allow httpd_t syncthing_content_rw_t:file map;
+allow httpd_t syncthing_content_rw_t:file { create getattr open read rename write setattr unlink };

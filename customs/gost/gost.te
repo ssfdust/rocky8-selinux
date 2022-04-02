@@ -1,0 +1,9 @@
+module gost 1.0;
+
+require {
+	type httpd_t;
+	type sysctl_net_t;
+        class file {open read};
+}
+
+allow httpd_t sysctl_net_t:file { open read };

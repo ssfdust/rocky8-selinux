@@ -1,0 +1,21 @@
+
+module my-syncthing 1.0;
+
+require {
+        type syncthing_t;
+        type init_t;
+        type syncthing_xdg_config_t;
+        class process2 nnp_transition;
+	type sysfs_t;
+        type httpd_var_lib_t;
+        class file { read write open };
+        class dir { getattr search };
+}
+
+#============= init_t ==============
+allow init_t syncthing_t:process2 nnp_transition;
+allow init_t syncthing_xdg_config_t:file { read write };
+
+#============= syncthing_t ==============
+allow syncthing_t sysfs_t:file { read open };
+allow syncthing_t httpd_var_lib_t:dir { getattr search };

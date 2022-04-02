@@ -1,0 +1,53 @@
+
+module my-syncthing 1.0;
+
+require {
+	type unreserved_port_t;
+	type user_home_dir_t;
+	type syncthing_port_t;
+	type syncthing_xdg_config_t;
+	type init_t;
+	type httpd_var_lib_t;
+	type syncthing_t;
+	type sysfs_t;
+	type httpd_sys_rw_content_t;
+	class process2 nnp_transition;
+	class file { getattr open read write };
+	class udp_socket name_bind;
+	class tcp_socket name_bind;
+	class dir { read remove_name rmdir write };
+}
+
+#============= init_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow init_t syncthing_t:process2 nnp_transition;
+allow init_t syncthing_xdg_config_t:file { read write };
+
+#============= syncthing_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t httpd_sys_rw_content_t:dir read;
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t httpd_sys_rw_content_t:file getattr;
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t httpd_var_lib_t:dir { read remove_name rmdir write };
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t httpd_var_lib_t:file getattr;
+allow syncthing_t syncthing_port_t:tcp_socket name_bind;
+allow syncthing_t syncthing_port_t:udp_socket name_bind;
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t sysfs_t:file { open read };
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t unreserved_port_t:tcp_socket name_bind;
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t unreserved_port_t:udp_socket name_bind;
+
+#!!!! This avc is allowed in the current policy
+allow syncthing_t user_home_dir_t:dir read;

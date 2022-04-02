@@ -1,0 +1,12 @@
+module nextcloud 1.0;
+require {
+	type configfs_t;
+        type httpd_t;
+        class capability net_admin;
+        class dir getattr;
+}
+
+
+#============= httpd_t ==============
+allow httpd_t configfs_t:dir getattr;
+allow httpd_t self:capability net_admin;

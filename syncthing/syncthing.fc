@@ -1,0 +1,1 @@
+/usr/bin/syncthing		--	gen_context(system_u:object_r:syncthing_exec_t,s0)

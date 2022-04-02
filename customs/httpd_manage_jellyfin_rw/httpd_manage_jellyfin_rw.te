@@ -1,0 +1,28 @@
+
+module httpd_manage_jellyfin_rw 1.0.1;
+
+require {
+	type jellyfin_content_rw_t;
+	type httpd_t;
+	type jellyfin_t;
+	type user_home_t;
+	class file { create getattr map open read rename write setattr unlink };
+	class dir { add_name create read remove_name rename reparent setattr write };
+}
+
+#============= httpd_t ==============
+allow httpd_t jellyfin_content_rw_t:dir { add_name create read remove_name rename reparent setattr write };
+
+
+#============= jellyfin_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow jellyfin_t user_home_t:file read;
+allow jellyfin_t user_home_t:file write;
+
+#!!!! This avc can be allowed using the boolean 'domain_can_mmap_files'
+allow jellyfin_t user_home_t:file map;
+
+#!!!! This avc can be allowed using the boolean 'domain_can_mmap_files'
+allow httpd_t jellyfin_content_rw_t:file map;
+allow httpd_t jellyfin_content_rw_t:file { create getattr open read rename write setattr unlink };

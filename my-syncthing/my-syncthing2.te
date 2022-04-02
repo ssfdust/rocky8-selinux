@@ -1,0 +1,11 @@
+
+module my-syncthing2 1.0;
+
+require {
+	type syncthing_t;
+	type sysfs_t;
+	class file open;
+}
+
+#============= syncthing_t ==============
+allow syncthing_t sysfs_t:file open;

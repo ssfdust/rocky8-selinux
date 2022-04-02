@@ -1,0 +1,244 @@
+
+## <summary>policy for syncthing</summary>
+
+########################################
+## <summary>
+##	Execute syncthing_exec_t in the syncthing domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`syncthing_domtrans',`
+	gen_require(`
+		type syncthing_t, syncthing_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, syncthing_exec_t, syncthing_t)
+')
+
+######################################
+## <summary>
+##	Execute syncthing in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`syncthing_exec',`
+	gen_require(`
+		type syncthing_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, syncthing_exec_t)
+')
+
+#######################################
+## <summary>
+##	Template for handling user content through standard tunables
+## </summary>
+## <desc>
+##	<p>
+##	This template generates the tunable blocks for accessing
+##	end user content, either the generic one (user_home_t)
+##	or the complete one (based on user_home_content_type).
+##	</p>
+##	<p>
+##	It calls the *_read_generic_user_content,
+##	*_read_all_user_content, *_manage_generic_user_content, and
+##	*_manage_all_user_content booleans.
+##	</p>
+## </desc>
+## <param name="prefix">
+##	<summary>
+##	The application domain prefix to use, meant for the boolean
+##	calls
+##	</summary>
+## </param>
+## <param name="domain">
+##	<summary>
+##	The application domain which is granted the necessary privileges
+##	</summary>
+## </param>
+## <rolebase/>
+#
+template(`userdom_user_content_access_template',`
+	## <desc>
+	##	<p>
+	##	Grant the $1 domains read access to generic user content
+	##	</p>
+	## </desc>
+	gen_tunable(`$1_read_generic_user_content', true)
+
+	## <desc>
+	##	<p>
+	##	Grant the $1 domains read access to all user content
+	##	</p>
+	## </desc>
+	gen_tunable(`$1_read_all_user_content', false)
+
+	## <desc>
+	##	<p>
+	##	Grant the $1 domains manage rights on generic user content
+	##	</p>
+	## </desc>
+	gen_tunable(`$1_manage_generic_user_content', false)
+
+	## <desc>
+	##	<p>
+	##	Grant the $1 domains manage rights on all user content
+	##	</p>
+	## </desc>
+	gen_tunable(`$1_manage_all_user_content', false)
+
+	tunable_policy(`$1_read_generic_user_content',`
+		userdom_list_user_tmp($2)
+		userdom_list_user_home_content($2)
+		userdom_read_user_home_content_files($2)
+		userdom_read_user_home_content_symlinks($2)
+		userdom_read_user_tmp_files($2)
+		userdom_read_user_tmp_symlinks($2)
+	',`
+		files_dontaudit_list_home($2)
+		files_dontaudit_list_tmp($2)
+
+		userdom_dontaudit_list_user_home_dirs($2)
+		userdom_dontaudit_list_user_tmp($2)
+		userdom_dontaudit_read_user_home_content_files($2)
+		userdom_dontaudit_read_user_tmp_files($2)
+	')
+
+	tunable_policy(`$1_read_all_user_content',`
+		userdom_list_user_tmp($2)
+		userdom_read_all_user_home_content($2)
+	')
+
+	tunable_policy(`$1_manage_generic_user_content',`
+		userdom_manage_user_tmp_dirs($2)
+		userdom_manage_user_tmp_files($2)
+		userdom_manage_user_tmp_symlinks($2)
+		userdom_manage_user_home_content_dirs($2)
+		userdom_manage_user_home_content_files($2)
+		userdom_manage_user_home_content_symlinks($2)
+	')
+
+	tunable_policy(`$1_manage_all_user_content',`
+		userdom_manage_all_user_home_content($2)
+	')
+')
+
+########################################
+## <summary>
+##      Make a TCP connection to the syncthing ports.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`syncthing_tcp_connect_syncthing_port',`
+        gen_require(`
+                type syncthing_port_t;
+        ')
+
+        allow $1 syncthing_port_t:tcp_socket name_connect;
+')
+
+########################################
+## <summary>
+##      Send and receive syncthing_server packets.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="both" weight="10"/>
+#
+interface(`syncthing_sendrecv_syncthing_server_packets',`
+        syncthing_send_syncthing_server_packets($1)
+        syncthing_receive_syncthing_server_packets($1)
+')
+
+########################################
+## <summary>
+##      Send syncthing_server packets.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="write" weight="10"/>
+#
+interface(`syncthing_send_syncthing_server_packets',`
+        gen_require(`
+                type syncthing_server_packet_t;
+        ')
+
+        allow $1 syncthing_server_packet_t:packet send;
+')
+
+########################################
+## <summary>
+##      Receive syncthing_server packets.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="read" weight="10"/>
+#
+interface(`syncthing_receive_syncthing_server_packets',`
+        gen_require(`
+                type syncthing_server_packet_t;
+        ')
+
+        allow $1 syncthing_server_packet_t:packet recv;
+')
+
+########################################
+## <summary>
+##      Bind TCP sockets to the syncthing port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="none"/>
+#
+interface(`syncthing_tcp_bind_syncthing_port',`
+        gen_require(`
+                type syncthing_port_t;
+        ')
+
+        allow $1 syncthing_port_t:tcp_socket name_bind;
+        allow $1 self:capability net_bind_service;
+')
+
+########################################
+## <summary>
+##      Bind UDP sockets to syncthing ports.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`syncthing_udp_bind_syncthing_port',`
+        gen_require(`
+                type syncthing_port_t, ssdp_port_t;
+        ')
+
+        allow $1 { syncthing_port_t ssdp_port_t }:udp_socket name_bind;
+')

@@ -1,0 +1,30 @@
+
+module aria2rpc 1.0;
+
+require {
+	type httpd_sys_script_t;
+	type httpd_var_lib_t;
+	type user_home_dir_t;
+	type init_t;
+	type httpd_t;
+	type hugetlbfs_t;
+	type jellyfin_content_rw_t;
+	type syncthing_content_rw_t;
+	class unix_stream_socket { getattr ioctl };
+	class dir { getattr open read rmdir search write };
+	class file { getattr map read write };
+}
+
+#============= httpd_sys_script_t ==============
+allow httpd_sys_script_t httpd_var_lib_t:dir search;
+
+#!!!! This avc can be allowed using the boolean 'domain_can_mmap_files'
+allow httpd_sys_script_t hugetlbfs_t:file map;
+allow httpd_sys_script_t hugetlbfs_t:file { read write };
+allow httpd_sys_script_t init_t:unix_stream_socket { getattr ioctl };
+allow httpd_sys_script_t jellyfin_content_rw_t:dir { getattr open read search write };
+allow httpd_sys_script_t jellyfin_content_rw_t:file getattr;
+
+#!!!! This avc can be allowed using one of the these booleans:
+#     httpd_enable_homedirs, httpd_read_user_content
+allow httpd_sys_script_t user_home_dir_t:dir search;
